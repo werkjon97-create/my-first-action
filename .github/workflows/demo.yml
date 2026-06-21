@@ -1,29 +1,55 @@
-name: GitHub Actions Demo
+name: GitHub Actions GUI RDP (Brave Edition)
 
-# 1. تحديد الحدث: السكربت سيعمل يدوياً عند الضغط على زر تشغيل
+# تشغيل السكربت يدوياً من تبويب Actions
 on:
   workflow_dispatch:
 
 jobs:
-  explore-github-actions:
-    # 2. تحديد نوع النظام (سيرفر Ubuntu مجاني من مايكروسوفت)
+  desktop-environment:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Print Hello Message
-        run: echo "أهلاً بك في أول تجربة لـ GitHub Actions!"
-
-      - name: Show Server Hardware Specs
+      - name: Install Google Chrome Remote Desktop
         run: |
-          echo "=== مواصفات معالج السيرفر ==="
-          lscpu | grep "Model name"
-          echo "=== الذاكرة العشوائية (RAM) ==="
-          free -h
+          sudo apt update
+          wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+          sudo dpkg --install chrome-remote-desktop_current_amd64.deb || sudo apt-get install --fix-broken -y
 
-      - name: Test Internet Speed on GitHub Server
+      - name: Install Desktop Environment (XFCE4 Light & Fast)
         run: |
-          echo "=== جاري فحص سرعة الإنترنت للسيرفر السحابي ==="
-          curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 - --simple
+          sudo apt install -y xfce4 xfce4-goodies
+          # إعداد الواجهة الرسومية الافتراضية بدون طلب تدخل يدوي
+          sudo DEBIAN_FRONTEND=noninteractive apt install --set-selections <<< "lightdm shared/default-display-manager select lightdm"
+          sudo apt install -y lightdm
+          sudo systemctl disable lightdm
+          echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > ~/.chrome-remote-desktop-session
+
+      - name: Install Brave Browser (Fast & Ad-Free)
+        run: |
+          sudo apt install -y curl
+          sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.p/brave-browser-release.list
+          sudo apt update
+          sudo apt install -y brave-browser
+
+      - name: Configure and Start Remote Desktop Host
+        env:
+          GOOGLE_CODE: ${{ secrets.CHROME_HEADLESS_CODE }}
+        run: |
+          # تشغيل أمر التفعيل السري المأخوذ من إعدادات الـ Secrets
+          # تم تعيين رمز الـ PIN الافتراضي للدخول وهو: 123456
+          $GOOGLE_CODE --pin=123456
+
+      - name: Keep Server Alive (5 Hours Session)
+        run: |
+          echo "=========================================================="
+          echo "🚀 السيرفر السحابي متصل بالواجهة الرسومية بنجاح واحترافية!"
+          echo "🌐 يمكنك الدخول الآن عبر: https://remotedesktop.google.com/access"
+          echo "🔑 رمز الـ PIN الخاص بك للدخول هو: 123456"
+          echo "=========================================================="
+          
+          # إبقاء الجلسة حية لمدة 5 ساعات (18000 ثانية)
+          sleep 18000

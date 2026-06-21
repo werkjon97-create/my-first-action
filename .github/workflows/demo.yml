@@ -1,0 +1,29 @@
+name: GitHub Actions Demo
+
+# 1. تحديد الحدث: السكربت سيعمل يدوياً عند الضغط على زر تشغيل
+on:
+  workflow_dispatch:
+
+jobs:
+  explore-github-actions:
+    # 2. تحديد نوع النظام (سيرفر Ubuntu مجاني من مايكروسوفت)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Print Hello Message
+        run: echo "أهلاً بك في أول تجربة لـ GitHub Actions!"
+
+      - name: Show Server Hardware Specs
+        run: |
+          echo "=== مواصفات معالج السيرفر ==="
+          lscpu | grep "Model name"
+          echo "=== الذاكرة العشوائية (RAM) ==="
+          free -h
+
+      - name: Test Internet Speed on GitHub Server
+        run: |
+          echo "=== جاري فحص سرعة الإنترنت للسيرفر السحابي ==="
+          curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 - --simple

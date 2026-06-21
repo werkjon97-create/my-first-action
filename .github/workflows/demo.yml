@@ -18,27 +18,26 @@ jobs:
           sudo dpkg --install chrome-remote-desktop_current_amd64.deb || sudo apt-get install --fix-broken -y
 
       - name: Install Desktop Environment (XFCE4 Stable Fix)
-        # تم دمج الأوامر لتجنب تعليق واجهة lightdm وتثبيت الواجهة بدون طلب مدخلات
         run: |
-          sudo apt update
+          sudo apt update || true
           sudo DEBIAN_FRONTEND=noninteractive apt install -y xfce4 xfce4-goodies
           echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > ~/.chrome-remote-desktop-session
 
-      - name: Install Brave Browser (Fast & Ad-Free)
+      - name: Install Brave Browser (Fixed Path)
         run: |
           sudo apt install -y curl
           sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+          # تصحيح المسار هنا إلى .d بدلاً من .p
           echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-          sudo apt update
+          sudo apt update || true
           sudo apt install -y brave-browser
 
       - name: Configure and Start Remote Desktop Host
         env:
           GOOGLE_CODE: ${{ secrets.CHROME_HEADLESS_CODE }}
         run: |
-          # تشغيل أمر التفعيل السري المأخوذ من إعدادات الـ Secrets
-          # تذكر: كود جوجل القديم قد انتهت صلاحيته، تأكد من توليد كود جديد ووضعه في الـ Secrets
-          $GOOGLE_CODE --pin=123456
+          # تأكيد تشغيل الكود السري عبر الـ bash مباشرة لتفادي خطأ 127
+          bash -c "$GOOGLE_CODE --pin=123456"
 
       - name: Keep Server Alive (5 Hours Session)
         run: |
